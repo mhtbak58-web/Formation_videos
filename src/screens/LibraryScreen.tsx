@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useVideoPlayer, VideoView } from "expo-video";
 import { VideoCard } from "../components/VideoCard";
+import { VideoPlayer } from "../components/VideoPlayer";
 import { supabase } from "../lib/supabase";
 import { ProgressByVideo, Video } from "../types";
 
@@ -35,9 +35,6 @@ export function LibraryScreen({ email, progress, isAdmin, videos, onOpenAdmin, o
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(videos[0] ?? null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
-  const player = useVideoPlayer(selectedVideo?.playback_url ?? "", (instance) => {
-    instance.loop = false;
-  });
 
   const categories = useMemo(() => {
     return Array.from(new Set(videos.map((video) => video.category)));
@@ -176,7 +173,7 @@ export function LibraryScreen({ email, progress, isAdmin, videos, onOpenAdmin, o
       <ScrollView contentContainerStyle={styles.content}>
         {selectedVideo ? (
           <View style={styles.playerSection}>
-            <VideoView allowsFullscreen allowsPictureInPicture player={player} style={styles.video} />
+            <VideoPlayer source={selectedVideo.playback_url} style={styles.video} />
             <View style={styles.playerInfo}>
               <Text style={styles.eyebrow}>Video de presentation</Text>
               <Text style={styles.selectedTitle}>{selectedVideo.title}</Text>
