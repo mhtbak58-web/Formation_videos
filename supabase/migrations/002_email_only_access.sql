@@ -5,6 +5,21 @@
 -- public anon key. Acceptable for now since the app is small and the data
 -- isn't sensitive; revisit if that changes.
 
+drop policy if exists "Users and admins can read allowed emails" on public.allowed_emails;
+drop policy if exists "Admins can insert allowed emails" on public.allowed_emails;
+drop policy if exists "Admins can update allowed emails" on public.allowed_emails;
+drop policy if exists "Admins can delete allowed emails" on public.allowed_emails;
+drop policy if exists "Admins can read admin emails" on public.admin_emails;
+drop policy if exists "Admins can insert admin emails" on public.admin_emails;
+drop policy if exists "Admins can delete admin emails" on public.admin_emails;
+drop policy if exists "Allowed users and admins can read videos" on public.videos;
+drop policy if exists "Admins can insert videos" on public.videos;
+drop policy if exists "Admins can update videos" on public.videos;
+drop policy if exists "Admins can delete videos" on public.videos;
+drop policy if exists "Users can read their progress" on public.video_progress;
+drop policy if exists "Users can insert their progress" on public.video_progress;
+drop policy if exists "Users can update their progress" on public.video_progress;
+
 drop trigger if exists set_progress_user_id on public.video_progress;
 drop function if exists public.set_progress_user_id();
 
@@ -22,21 +37,6 @@ delete from public.video_progress where email is null;
 alter table public.video_progress alter column email set not null;
 alter table public.video_progress drop column if exists user_id;
 alter table public.video_progress add constraint video_progress_pkey primary key (email, video_id);
-
-drop policy if exists "Users and admins can read allowed emails" on public.allowed_emails;
-drop policy if exists "Admins can insert allowed emails" on public.allowed_emails;
-drop policy if exists "Admins can update allowed emails" on public.allowed_emails;
-drop policy if exists "Admins can delete allowed emails" on public.allowed_emails;
-drop policy if exists "Admins can read admin emails" on public.admin_emails;
-drop policy if exists "Admins can insert admin emails" on public.admin_emails;
-drop policy if exists "Admins can delete admin emails" on public.admin_emails;
-drop policy if exists "Allowed users and admins can read videos" on public.videos;
-drop policy if exists "Admins can insert videos" on public.videos;
-drop policy if exists "Admins can update videos" on public.videos;
-drop policy if exists "Admins can delete videos" on public.videos;
-drop policy if exists "Users can read their progress" on public.video_progress;
-drop policy if exists "Users can insert their progress" on public.video_progress;
-drop policy if exists "Users can update their progress" on public.video_progress;
 
 create policy "Anyone can read allowed emails" on public.allowed_emails for select using (true);
 create policy "Anyone can read admin emails" on public.admin_emails for select using (true);
