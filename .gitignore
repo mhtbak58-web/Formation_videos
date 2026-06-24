@@ -1,0 +1,14 @@
+node_modules/
+.expo/
+.expo-home/
+.env
+expo.log
+expo.err.log
+dist/
+web.log
+emulator.log
+*.png
+dump*.xml
+window_dump*.xml
+.idea/
+.claude/

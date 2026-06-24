@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "Formation Videos",
+    "slug": "formation-videos",
+    "scheme": "formationvideos",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.formationvideos.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0f172a"
+      }
+    },
+    "extra": {
+      "supabaseUrl": "$EXPO_PUBLIC_SUPABASE_URL",
+      "supabaseAnonKey": "$EXPO_PUBLIC_SUPABASE_ANON_KEY"
+    },
+    "plugins": [
+      "./plugins/withAndroidAuto.js"
+    ]
+  }
+}
