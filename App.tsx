@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
-import { Session } from "@supabase/supabase-js";
 import { demoVideos } from "./src/data";
 import { clearAndroidAutoCatalog, publishAndroidAutoCatalog } from "./src/lib/androidAuto";
 import { hasSupabaseConfig, supabase } from "./src/lib/supabase";
@@ -10,29 +10,31 @@ import { AuthScreen } from "./src/screens/AuthScreen";
 import { LibraryScreen } from "./src/screens/LibraryScreen";
 import { ProgressByVideo, Video } from "./src/types";
 
+const STORED_EMAIL_KEY = "loggedInEmail";
+
 export default function App() {
   const [booting, setBooting] = useState(true);
   const [email, setEmail] = useState("");
   const [hasAccess, setHasAccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [progress, setProgress] = useState<ProgressByVideo>({});
-  const [session, setSession] = useState<Session | null>(null);
   const [showAdmin, setShowAdmin] = useState(false);
   const [videos, setVideos] = useState<Video[]>(demoVideos);
 
-  async function loadPrivateContent(currentSession: Session) {
+  async function attemptAccess(rawEmail: string) {
+    const normalizedEmail = rawEmail.trim().toLowerCase();
     const client = supabase;
-    const userEmail = currentSession.user.email?.toLowerCase();
 
-    if (!client || !userEmail) {
+    if (!client) {
+      setBooting(false);
       return;
     }
 
     setBooting(true);
 
     const [{ data: allowed, error: allowedError }, { data: admin, error: adminError }] = await Promise.all([
-      client.from("allowed_emails").select("email").eq("email", userEmail).maybeSingle(),
-      client.from("admin_emails").select("email").eq("email", userEmail).maybeSingle()
+      client.from("allowed_emails").select("email").eq("email", normalizedEmail).maybeSingle(),
+      client.from("admin_emails").select("email").eq("email", normalizedEmail).maybeSingle()
     ]);
 
     const nextIsAdmin = Boolean(admin);
@@ -41,26 +43,29 @@ export default function App() {
       Alert.alert("Verification impossible", allowedError?.message ?? adminError?.message);
     }
 
+    setEmail(normalizedEmail);
+
     if (!allowed && !nextIsAdmin) {
-      setEmail(userEmail);
       setHasAccess(false);
       setIsAdmin(false);
       setShowAdmin(false);
+      await AsyncStorage.removeItem(STORED_EMAIL_KEY);
       setBooting(false);
       return;
     }
 
+    await AsyncStorage.setItem(STORED_EMAIL_KEY, normalizedEmail);
+
     const videosQuery = client.from("videos").select("*").order("sort_order", { ascending: true });
     const [{ data: videoRows, error: videosError }, { data: progressRows, error: progressError }] = await Promise.all([
       nextIsAdmin ? videosQuery : videosQuery.eq("is_published", true),
-      client.from("video_progress").select("video_id, completed").eq("user_id", currentSession.user.id)
+      client.from("video_progress").select("video_id, completed").eq("email", normalizedEmail)
     ]);
 
     if (videosError || progressError) {
       Alert.alert("Chargement incomplet", videosError?.message ?? progressError?.message);
     }
 
-    setEmail(userEmail);
     setHasAccess(true);
     setIsAdmin(nextIsAdmin);
     setVideos((videoRows as Video[] | null) ?? []);
@@ -79,23 +84,14 @@ export default function App() {
       return;
     }
 
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setBooting(false);
+    AsyncStorage.getItem(STORED_EMAIL_KEY).then((storedEmail) => {
+      if (storedEmail) {
+        attemptAccess(storedEmail);
+      } else {
+        setBooting(false);
+      }
     });
-
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-    });
-
-    return () => listener.subscription.unsubscribe();
   }, []);
-
-  useEffect(() => {
-    if (session) {
-      loadPrivateContent(session);
-    }
-  }, [session]);
 
   useEffect(() => {
     if (hasAccess) {
@@ -104,16 +100,12 @@ export default function App() {
   }, [videos, hasAccess]);
 
   async function signOut() {
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
-
+    await AsyncStorage.removeItem(STORED_EMAIL_KEY);
     await clearAndroidAutoCatalog();
 
     setEmail("");
     setHasAccess(false);
     setIsAdmin(false);
-    setSession(null);
     setShowAdmin(false);
     setProgress({});
   }
@@ -128,19 +120,20 @@ export default function App() {
     );
   }
 
-  if (!session) {
+  if (!email) {
     return (
       <>
         <StatusBar style="dark" />
         <AuthScreen
           demoMode={!hasSupabaseConfig}
           onDemoAccess={() => Alert.alert("Configuration manquante", "Aucun acces direct n'est disponible sans configuration Supabase.")}
+          onSubmit={attemptAccess}
         />
       </>
     );
   }
 
-  if (!hasAccess && session) {
+  if (!hasAccess) {
     return (
       <View style={styles.denied}>
         <StatusBar style="dark" />
@@ -151,11 +144,11 @@ export default function App() {
     );
   }
 
-  if (showAdmin && isAdmin && session) {
+  if (showAdmin && isAdmin) {
     return (
       <>
         <StatusBar style="dark" />
-        <AdminScreen onBack={() => setShowAdmin(false)} onChanged={() => loadPrivateContent(session)} />
+        <AdminScreen onBack={() => setShowAdmin(false)} onChanged={() => attemptAccess(email)} />
       </>
     );
   }

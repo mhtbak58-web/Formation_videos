@@ -80,6 +80,7 @@ export function LibraryScreen({ email, progress, isAdmin, videos, onOpenAdmin, o
     const { error } = await supabase.from("video_progress").upsert({
       completed: true,
       completed_at: new Date().toISOString(),
+      email,
       video_id: video.id
     });
 

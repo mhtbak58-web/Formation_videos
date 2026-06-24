@@ -1,17 +1,18 @@
 import { useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
-import { supabase } from "../lib/supabase";
+import { hasSupabaseConfig } from "../lib/supabase";
 
 type Props = {
   demoMode: boolean;
   onDemoAccess: () => void;
+  onSubmit: (email: string) => void;
 };
 
-export function AuthScreen({ demoMode, onDemoAccess }: Props) {
+export function AuthScreen({ demoMode, onDemoAccess, onSubmit }: Props) {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
-  async function sendMagicLink() {
+  function handleSubmit() {
     const normalizedEmail = email.trim().toLowerCase();
 
     if (!normalizedEmail.includes("@")) {
@@ -19,26 +20,13 @@ export function AuthScreen({ demoMode, onDemoAccess }: Props) {
       return;
     }
 
-    if (!supabase) {
+    if (!hasSupabaseConfig) {
       onDemoAccess();
       return;
     }
 
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOtp({
-      email: normalizedEmail,
-      options: {
-        emailRedirectTo: "formationvideos://login"
-      }
-    });
-    setLoading(false);
-
-    if (error) {
-      Alert.alert("Connexion impossible", error.message);
-      return;
-    }
-
-    Alert.alert("Lien envoye", "Consulte ta boite mail pour ouvrir l'application.");
+    setSubmitting(true);
+    onSubmit(normalizedEmail);
   }
 
   return (
@@ -56,7 +44,7 @@ export function AuthScreen({ demoMode, onDemoAccess }: Props) {
       <View style={styles.panel}>
         <Text style={styles.kicker}>Acces prive</Text>
         <Text style={styles.title}>Videos instructives</Text>
-        <Text style={styles.subtitle}>Connecte-toi avec l'email autorise par l'administrateur.</Text>
+        <Text style={styles.subtitle}>Entre l'email autorise par l'administrateur pour acceder directement.</Text>
 
         <TextInput
           autoCapitalize="none"
@@ -69,13 +57,13 @@ export function AuthScreen({ demoMode, onDemoAccess }: Props) {
           value={email}
         />
 
-        <Pressable disabled={loading} onPress={sendMagicLink} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
-          {loading ? (
+        <Pressable disabled={submitting} onPress={handleSubmit} style={({ pressed }) => [styles.button, pressed && styles.pressed]}>
+          {submitting ? (
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <>
               <Text style={styles.buttonIcon}>▶</Text>
-              <Text style={styles.buttonText}>Recevoir le lien</Text>
+              <Text style={styles.buttonText}>Acceder</Text>
             </>
           )}
         </Pressable>
