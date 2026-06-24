@@ -229,13 +229,13 @@ export function LibraryScreen({ email, progress, isAdmin, videos, onOpenAdmin, o
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: "#F7F1E6",
+    backgroundColor: "#FAF7F3",
     flex: 1
   },
   header: {
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    borderBottomColor: "#EAE0D0",
+    borderBottomColor: "#E0C8B7",
     borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -249,7 +249,7 @@ const styles = StyleSheet.create({
   },
   brandMark: {
     alignItems: "center",
-    borderColor: "#C08A3E",
+    borderColor: "#7A9C59",
     borderRadius: 10,
     borderWidth: 1.5,
     height: 38,
@@ -257,11 +257,11 @@ const styles = StyleSheet.create({
     width: 38
   },
   brandPlay: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 14
   },
   eyebrow: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.6,
@@ -284,22 +284,22 @@ const styles = StyleSheet.create({
     marginTop: 6
   },
   progressLabel: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 11,
     fontWeight: "700",
     marginTop: 3
   },
   progressTrack: {
-    backgroundColor: "#EAE0D0",
+    backgroundColor: "#E0C8B7",
     height: 4,
     width: "100%"
   },
   progressFill: {
-    backgroundColor: "#C08A3E",
+    backgroundColor: "#7A9C59",
     height: 4
   },
   signOutButton: {
-    borderColor: "#EAE0D0",
+    borderColor: "#E0C8B7",
     borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: 16,
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
     gap: 8
   },
   adminButton: {
-    backgroundColor: "#C08A3E",
+    backgroundColor: "#7A9C59",
     borderRadius: 999,
     paddingHorizontal: 16,
     paddingVertical: 9
@@ -334,7 +334,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     alignSelf: "flex-start",
     backgroundColor: "#FFFFFF",
-    borderColor: "#C08A3E",
+    borderColor: "#7A9C59",
     borderRadius: 999,
     borderWidth: 1,
     flexDirection: "row",
@@ -346,21 +346,21 @@ const styles = StyleSheet.create({
     opacity: 0.75
   },
   categoryPickerIcon: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 14
   },
   categoryPickerText: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 14,
     fontWeight: "700"
   },
   categoryPickerChevron: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 10
   },
   categoryMenu: {
     backgroundColor: "#FFFFFF",
-    borderColor: "#EAE0D0",
+    borderColor: "#E0C8B7",
     borderRadius: 14,
     borderWidth: 1,
     marginTop: 8,
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     fontWeight: "600"
   },
   categoryMenuCheck: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 14,
     fontWeight: "700"
   },
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   },
   playerSection: {
     backgroundColor: "#FFFFFF",
-    borderColor: "#EAE0D0",
+    borderColor: "#E0C8B7",
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 28,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   completeButton: {
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#C08A3E",
+    backgroundColor: "#7A9C59",
     borderRadius: 999,
     flexDirection: "row",
     gap: 8,
@@ -451,7 +451,7 @@ const styles = StyleSheet.create({
   certificateCard: {
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    borderColor: "#C08A3E",
+    borderColor: "#7A9C59",
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 24,
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     gap: 8
   },
   badge: {
-    backgroundColor: "#C08A3E",
+    backgroundColor: "#7A9C59",
     borderRadius: 999,
     color: "#FFFFFF",
     fontSize: 12,
@@ -494,7 +494,7 @@ const styles = StyleSheet.create({
   resourceRow: {
     alignItems: "center",
     backgroundColor: "#FFFFFF",
-    borderColor: "#EAE0D0",
+    borderColor: "#E0C8B7",
     borderRadius: 12,
     borderWidth: 1,
     flexDirection: "row",

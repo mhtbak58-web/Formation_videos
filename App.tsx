@@ -114,7 +114,7 @@ export default function App() {
     return (
       <View style={styles.loading}>
         <StatusBar style="dark" />
-        <ActivityIndicator color="#C08A3E" size="large" />
+        <ActivityIndicator color="#7A9C59" size="large" />
         <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
@@ -172,7 +172,7 @@ export default function App() {
 const styles = StyleSheet.create({
   loading: {
     alignItems: "center",
-    backgroundColor: "#F7F1E6",
+    backgroundColor: "#FAF7F3",
     flex: 1,
     justifyContent: "center"
   },
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   },
   denied: {
     alignItems: "center",
-    backgroundColor: "#F7F1E6",
+    backgroundColor: "#FAF7F3",
     flex: 1,
     justifyContent: "center",
     padding: 24
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   deniedLink: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.6,

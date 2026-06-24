@@ -45,7 +45,7 @@ export function VideoCard({ completed, locked, video, onPress }: Props) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: "#FFFFFF",
-    borderColor: "#EAE0D0",
+    borderColor: "#E0C8B7",
     borderRadius: 14,
     borderWidth: 1,
     flexDirection: "row",
@@ -69,13 +69,13 @@ const styles = StyleSheet.create({
   thumbnail: {
     alignItems: "center",
     aspectRatio: 1,
-    backgroundColor: "#F7F1E6",
+    backgroundColor: "#FAF7F3",
     borderRadius: 10,
     justifyContent: "center",
     width: 84
   },
   play: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 22
   },
   durationBadge: {
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   category: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 12,
     fontWeight: "700"
   },

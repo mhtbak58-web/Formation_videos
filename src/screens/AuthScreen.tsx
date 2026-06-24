@@ -81,7 +81,7 @@ export function AuthScreen({ demoMode, onDemoAccess, onSubmit }: Props) {
 const styles = StyleSheet.create({
   screen: {
     alignItems: "center",
-    backgroundColor: "#F7F1E6",
+    backgroundColor: "#FAF7F3",
     flex: 1,
     justifyContent: "center",
     padding: 24
@@ -94,7 +94,7 @@ const styles = StyleSheet.create({
   },
   brandMark: {
     alignItems: "center",
-    borderColor: "#C08A3E",
+    borderColor: "#7A9C59",
     borderRadius: 14,
     borderWidth: 1.5,
     height: 48,
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
     width: 48
   },
   brandPlay: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 18
   },
   brandName: {
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   },
   panel: {
     backgroundColor: "#FFFFFF",
-    borderColor: "#EAE0D0",
+    borderColor: "#E0C8B7",
     borderRadius: 18,
     borderWidth: 1,
     maxWidth: 440,
@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
     width: "100%"
   },
   kicker: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 2,
@@ -152,8 +152,8 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   input: {
-    backgroundColor: "#FBF6EC",
-    borderColor: "#EAE0D0",
+    backgroundColor: "#FAF1E9",
+    borderColor: "#E0C8B7",
     borderRadius: 999,
     borderWidth: 1,
     color: "#2B2420",
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   button: {
     alignItems: "center",
-    backgroundColor: "#C08A3E",
+    backgroundColor: "#7A9C59",
     borderRadius: 999,
     flexDirection: "row",
     gap: 8,
@@ -185,14 +185,14 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     alignItems: "center",
-    borderColor: "#EAE0D0",
+    borderColor: "#E0C8B7",
     borderRadius: 999,
     borderWidth: 1,
     marginTop: 14,
     paddingVertical: 13
   },
   secondaryText: {
-    color: "#C08A3E",
+    color: "#7A9C59",
     fontSize: 14,
     fontWeight: "700"
   }
