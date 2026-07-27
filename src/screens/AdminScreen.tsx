@@ -14,6 +14,10 @@ type AllowedEmail = {
   note: string | null;
 };
 
+type ReplayEmail = {
+  email: string;
+};
+
 type VideoForm = {
   title: string;
   description: string;
@@ -34,6 +38,8 @@ export function AdminScreen({ onBack, onChanged }: Props) {
   const [allowedEmails, setAllowedEmails] = useState<AllowedEmail[]>([]);
   const [emailInput, setEmailInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [replayEmailInput, setReplayEmailInput] = useState("");
+  const [replayEmails, setReplayEmails] = useState<ReplayEmail[]>([]);
   const [saving, setSaving] = useState(false);
   const [videoForm, setVideoForm] = useState<VideoForm>(emptyVideoForm);
   const [videos, setVideos] = useState<Video[]>([]);
@@ -44,17 +50,19 @@ export function AdminScreen({ onBack, onChanged }: Props) {
     }
 
     setLoading(true);
-    const [{ data: emailRows, error: emailsError }, { data: videoRows, error: videosError }] = await Promise.all([
+    const [{ data: emailRows, error: emailsError }, { data: videoRows, error: videosError }, { data: replayRows, error: replayError }] = await Promise.all([
       supabase.from("allowed_emails").select("email, note").order("created_at", { ascending: false }),
-      supabase.from("videos").select("*").order("sort_order", { ascending: true })
+      supabase.from("videos").select("*").order("sort_order", { ascending: true }),
+      supabase.from("replay_emails").select("email").order("created_at", { ascending: false })
     ]);
 
-    if (emailsError || videosError) {
-      Alert.alert("Chargement admin impossible", emailsError?.message ?? videosError?.message);
+    if (emailsError || videosError || replayError) {
+      Alert.alert("Chargement admin impossible", emailsError?.message ?? videosError?.message ?? replayError?.message);
     }
 
     setAllowedEmails((emailRows as AllowedEmail[] | null) ?? []);
     setVideos((videoRows as Video[] | null) ?? []);
+    setReplayEmails((replayRows as ReplayEmail[] | null) ?? []);
     setLoading(false);
   }
 
@@ -92,6 +100,44 @@ export function AdminScreen({ onBack, onChanged }: Props) {
     }
 
     const { error } = await supabase.from("allowed_emails").delete().eq("email", email);
+    if (error) {
+      Alert.alert("Suppression impossible", error.message);
+      return;
+    }
+
+    await loadAdminData();
+  }
+
+  async function addReplayEmail() {
+    if (!supabase) {
+      return;
+    }
+
+    const normalizedEmail = replayEmailInput.trim().toLowerCase();
+    if (!normalizedEmail.includes("@")) {
+      Alert.alert("Email invalide", "Entre une adresse email valide.");
+      return;
+    }
+
+    setSaving(true);
+    const { error } = await supabase.from("replay_emails").insert({ email: normalizedEmail });
+    setSaving(false);
+
+    if (error) {
+      Alert.alert("Ajout impossible", error.message);
+      return;
+    }
+
+    setReplayEmailInput("");
+    await loadAdminData();
+  }
+
+  async function removeReplayEmail(email: string) {
+    if (!supabase) {
+      return;
+    }
+
+    const { error } = await supabase.from("replay_emails").delete().eq("email", email);
     if (error) {
       Alert.alert("Suppression impossible", error.message);
       return;
@@ -203,6 +249,31 @@ export function AdminScreen({ onBack, onChanged }: Props) {
             <View key={item.email} style={styles.row}>
               <Text style={styles.rowText}>{item.email}</Text>
               <Pressable onPress={() => removeAllowedEmail(item.email)} style={styles.dangerButton}>
+                <Text style={styles.dangerText}>Supprimer</Text>
+              </Pressable>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Acces Replays &amp; Tutos</Text>
+          <View style={styles.inlineForm}>
+            <TextInput
+              autoCapitalize="none"
+              keyboardType="email-address"
+              onChangeText={setReplayEmailInput}
+              placeholder="email@exemple.com"
+              style={[styles.input, styles.inlineInput]}
+              value={replayEmailInput}
+            />
+            <Pressable disabled={saving} onPress={addReplayEmail} style={styles.primaryButton}>
+              <Text style={styles.primaryText}>Ajouter</Text>
+            </Pressable>
+          </View>
+          {replayEmails.map((item) => (
+            <View key={item.email} style={styles.row}>
+              <Text style={styles.rowText}>{item.email}</Text>
+              <Pressable onPress={() => removeReplayEmail(item.email)} style={styles.dangerButton}>
                 <Text style={styles.dangerText}>Supprimer</Text>
               </Pressable>
             </View>

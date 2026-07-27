@@ -6,6 +6,7 @@ import { supabase } from "../lib/supabase";
 import { ProgressByVideo, Video } from "../types";
 
 type Props = {
+  canViewReplays: boolean;
   email: string;
   progress: ProgressByVideo;
   isAdmin: boolean;
@@ -32,7 +33,7 @@ function formatDuration(totalMinutes: number) {
   return minutes > 0 ? `${hours}h${String(minutes).padStart(2, "0")}` : `${hours}h`;
 }
 
-export function LibraryScreen({ email, progress, isAdmin, videos, onOpenAdmin, onOpenReplays, onProgressChange, onSignOut }: Props) {
+export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos, onOpenAdmin, onOpenReplays, onProgressChange, onSignOut }: Props) {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(videos[0] ?? null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
@@ -122,9 +123,11 @@ export function LibraryScreen({ email, progress, isAdmin, videos, onOpenAdmin, o
           </View>
         </View>
         <View style={styles.headerActions}>
-          <Pressable onPress={onOpenReplays} style={styles.replaysButton}>
-            <Text style={styles.replaysText}>Replays &amp; Tutos</Text>
-          </Pressable>
+          {canViewReplays ? (
+            <Pressable onPress={onOpenReplays} style={styles.replaysButton}>
+              <Text style={styles.replaysText}>Replays &amp; Tutos</Text>
+            </Pressable>
+          ) : null}
           {isAdmin ? (
             <Pressable onPress={onOpenAdmin} style={styles.adminButton}>
               <Text style={styles.adminText}>Admin</Text>

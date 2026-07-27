@@ -19,6 +19,7 @@ const STORED_EMAIL_KEY = "loggedInEmail";
 export default function App() {
   const [booting, setBooting] = useState(true);
   const [email, setEmail] = useState("");
+  const [canViewReplays, setCanViewReplays] = useState(false);
   const [hasAccess, setHasAccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [progress, setProgress] = useState<ProgressByVideo>({});
@@ -40,15 +41,21 @@ export default function App() {
 
     setBooting(true);
 
-    const [{ data: allowed, error: allowedError }, { data: admin, error: adminError }] = await Promise.all([
+    const [{ data: allowed, error: allowedError }, { data: admin, error: adminError }, { data: replayAccess, error: replayError }] = await Promise.all([
       client.from("allowed_emails").select("email").eq("email", normalizedEmail).maybeSingle(),
-      client.from("admin_emails").select("email").eq("email", normalizedEmail).maybeSingle()
+      client.from("admin_emails").select("email").eq("email", normalizedEmail).maybeSingle(),
+      client.from("replay_emails").select("email").eq("email", normalizedEmail).maybeSingle()
     ]);
 
     const nextIsAdmin = Boolean(admin);
+    const nextCanViewReplays = Boolean(replayAccess);
 
-    if ((allowedError && allowedError.code !== "PGRST116") || (adminError && adminError.code !== "PGRST116")) {
-      Alert.alert("Verification impossible", allowedError?.message ?? adminError?.message);
+    if (
+      (allowedError && allowedError.code !== "PGRST116") ||
+      (adminError && adminError.code !== "PGRST116") ||
+      (replayError && replayError.code !== "PGRST116")
+    ) {
+      Alert.alert("Verification impossible", allowedError?.message ?? adminError?.message ?? replayError?.message);
     }
 
     setEmail(normalizedEmail);
@@ -56,6 +63,7 @@ export default function App() {
     if (!allowed && !nextIsAdmin) {
       setHasAccess(false);
       setIsAdmin(false);
+      setCanViewReplays(false);
       setShowAdmin(false);
       await AsyncStorage.removeItem(STORED_EMAIL_KEY);
       setBooting(false);
@@ -76,6 +84,7 @@ export default function App() {
 
     setHasAccess(true);
     setIsAdmin(nextIsAdmin);
+    setCanViewReplays(nextCanViewReplays);
     setVideos((videoRows as Video[] | null) ?? []);
     setProgress(
       (progressRows ?? []).reduce<ProgressByVideo>((acc, item) => {
@@ -114,7 +123,9 @@ export default function App() {
     setEmail("");
     setHasAccess(false);
     setIsAdmin(false);
+    setCanViewReplays(false);
     setShowAdmin(false);
+    setShowReplays(false);
     setProgress({});
   }
 
@@ -161,7 +172,7 @@ export default function App() {
     );
   }
 
-  if (showReplays) {
+  if (showReplays && canViewReplays) {
     return (
       <>
         <StatusBar style="dark" />
@@ -174,6 +185,7 @@ export default function App() {
     <>
       <StatusBar style="dark" />
       <LibraryScreen
+        canViewReplays={canViewReplays}
         email={email}
         isAdmin={isAdmin}
         onOpenAdmin={() => setShowAdmin(true)}
