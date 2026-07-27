@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import { VideoCard } from "../components/VideoCard";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { VIDEO_CATEGORIES } from "../lib/categories";
 import { Video } from "../types";
@@ -49,9 +48,27 @@ export function ReplaysScreen({ videos, onBack }: Props) {
         {groups.map(({ category, items }) => (
           <View key={category} style={styles.categoryBlock}>
             <Text style={styles.categoryTitle}>{category}</Text>
-            {items.map((video) => (
-              <VideoCard completed={false} key={video.id} onPress={() => setSelectedVideo(video)} video={video} />
-            ))}
+            <View style={styles.grid}>
+              {items.map((video) => (
+                <Pressable
+                  key={video.id}
+                  onPress={() => setSelectedVideo(video)}
+                  style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}
+                >
+                  <View style={[styles.tileThumbnail, selectedVideo?.id === video.id && styles.tileThumbnailActive]}>
+                    <Text style={styles.tilePlay}>▶</Text>
+                    {video.duration_minutes ? (
+                      <View style={styles.tileDurationBadge}>
+                        <Text style={styles.tileDurationText}>{video.duration_minutes} min</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text numberOfLines={2} style={styles.tileTitle}>
+                    {video.title}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
         ))}
       </ScrollView>
@@ -151,5 +168,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 12
+  },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 16
+  },
+  tile: {
+    alignItems: "center",
+    width: 108
+  },
+  tilePressed: {
+    opacity: 0.7
+  },
+  tileThumbnail: {
+    alignItems: "center",
+    aspectRatio: 1,
+    backgroundColor: "#FFFFFF",
+    borderColor: "#E0C8B7",
+    borderRadius: 14,
+    borderWidth: 1,
+    justifyContent: "center",
+    marginBottom: 8,
+    width: "100%"
+  },
+  tileThumbnailActive: {
+    borderColor: "#7A9C59",
+    borderWidth: 2
+  },
+  tilePlay: {
+    color: "#7A9C59",
+    fontSize: 26
+  },
+  tileDurationBadge: {
+    backgroundColor: "rgba(43,36,32,0.85)",
+    borderRadius: 4,
+    bottom: 6,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    position: "absolute",
+    right: 6
+  },
+  tileDurationText: {
+    color: "#FFFFFF",
+    fontSize: 9,
+    fontWeight: "600"
+  },
+  tileTitle: {
+    color: "#2B2420",
+    fontSize: 12,
+    fontWeight: "600",
+    textAlign: "center"
   }
 });
