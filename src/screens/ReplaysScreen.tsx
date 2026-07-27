@@ -10,7 +10,7 @@ type Props = {
 };
 
 export function ReplaysScreen({ videos, onBack }: Props) {
-  const [selectedVideo, setSelectedVideo] = useState<Video | null>(videos[0] ?? null);
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
 
   const groups = useMemo(() => {
     return VIDEO_CATEGORIES.map((category) => ({
@@ -41,9 +41,9 @@ export function ReplaysScreen({ videos, onBack }: Props) {
               {selectedVideo.description ? <Text style={styles.selectedDescription}>{selectedVideo.description}</Text> : null}
             </View>
           </View>
-        ) : (
-          <Text style={styles.emptyText}>Aucun replay ou tuto disponible pour le moment.</Text>
-        )}
+        ) : null}
+
+        {videos.length === 0 ? <Text style={styles.emptyText}>Aucun replay ou tuto disponible pour le moment.</Text> : null}
 
         {groups.map(({ category, items }) => (
           <View key={category} style={styles.categoryBlock}>
