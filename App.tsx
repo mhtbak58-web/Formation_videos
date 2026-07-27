@@ -1,14 +1,18 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
 import { demoVideos } from "./src/data";
+import { VIDEO_CATEGORIES } from "./src/lib/categories";
 import { clearAndroidAutoCatalog, publishAndroidAutoCatalog } from "./src/lib/androidAuto";
 import { hasSupabaseConfig, supabase } from "./src/lib/supabase";
 import { AdminScreen } from "./src/screens/AdminScreen";
 import { AuthScreen } from "./src/screens/AuthScreen";
 import { LibraryScreen } from "./src/screens/LibraryScreen";
+import { ReplaysScreen } from "./src/screens/ReplaysScreen";
 import { ProgressByVideo, Video } from "./src/types";
+
+const REPLAY_CATEGORIES: readonly string[] = VIDEO_CATEGORIES;
 
 const STORED_EMAIL_KEY = "loggedInEmail";
 
@@ -19,7 +23,11 @@ export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [progress, setProgress] = useState<ProgressByVideo>({});
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showReplays, setShowReplays] = useState(false);
   const [videos, setVideos] = useState<Video[]>(demoVideos);
+
+  const courseVideos = useMemo(() => videos.filter((video) => !REPLAY_CATEGORIES.includes(video.category)), [videos]);
+  const replayVideos = useMemo(() => videos.filter((video) => REPLAY_CATEGORIES.includes(video.category)), [videos]);
 
   async function attemptAccess(rawEmail: string) {
     const normalizedEmail = rawEmail.trim().toLowerCase();
@@ -153,6 +161,15 @@ export default function App() {
     );
   }
 
+  if (showReplays) {
+    return (
+      <>
+        <StatusBar style="dark" />
+        <ReplaysScreen onBack={() => setShowReplays(false)} videos={replayVideos} />
+      </>
+    );
+  }
+
   return (
     <>
       <StatusBar style="dark" />
@@ -160,10 +177,11 @@ export default function App() {
         email={email}
         isAdmin={isAdmin}
         onOpenAdmin={() => setShowAdmin(true)}
+        onOpenReplays={() => setShowReplays(true)}
         onProgressChange={setProgress}
         onSignOut={signOut}
         progress={progress}
-        videos={videos}
+        videos={courseVideos}
       />
     </>
   );

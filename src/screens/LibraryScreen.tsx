@@ -11,6 +11,7 @@ type Props = {
   isAdmin: boolean;
   videos: Video[];
   onOpenAdmin: () => void;
+  onOpenReplays: () => void;
   onProgressChange: (progress: ProgressByVideo) => void;
   onSignOut: () => void;
 };
@@ -31,7 +32,7 @@ function formatDuration(totalMinutes: number) {
   return minutes > 0 ? `${hours}h${String(minutes).padStart(2, "0")}` : `${hours}h`;
 }
 
-export function LibraryScreen({ email, progress, isAdmin, videos, onOpenAdmin, onProgressChange, onSignOut }: Props) {
+export function LibraryScreen({ email, progress, isAdmin, videos, onOpenAdmin, onOpenReplays, onProgressChange, onSignOut }: Props) {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(videos[0] ?? null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
@@ -121,6 +122,9 @@ export function LibraryScreen({ email, progress, isAdmin, videos, onOpenAdmin, o
           </View>
         </View>
         <View style={styles.headerActions}>
+          <Pressable onPress={onOpenReplays} style={styles.replaysButton}>
+            <Text style={styles.replaysText}>Replays &amp; Tutos</Text>
+          </Pressable>
           {isAdmin ? (
             <Pressable onPress={onOpenAdmin} style={styles.adminButton}>
               <Text style={styles.adminText}>Admin</Text>
@@ -314,6 +318,18 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 16,
     paddingVertical: 9
+  },
+  replaysButton: {
+    borderColor: "#7A9C59",
+    borderRadius: 999,
+    borderWidth: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 9
+  },
+  replaysText: {
+    color: "#7A9C59",
+    fontSize: 12,
+    fontWeight: "700"
   },
   adminText: {
     color: "#FFFFFF",

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { VIDEO_CATEGORIES, VideoCategory } from "../lib/categories";
 import { supabase } from "../lib/supabase";
 import { Video } from "../types";
 
@@ -16,7 +17,7 @@ type AllowedEmail = {
 type VideoForm = {
   title: string;
   description: string;
-  category: string;
+  category: VideoCategory;
   duration: string;
   playbackUrl: string;
 };
@@ -24,7 +25,7 @@ type VideoForm = {
 const emptyVideoForm: VideoForm = {
   title: "",
   description: "",
-  category: "General",
+  category: "Replay",
   duration: "",
   playbackUrl: ""
 };
@@ -113,7 +114,7 @@ export function AdminScreen({ onBack, onChanged }: Props) {
     const { error } = await supabase.from("videos").insert({
       title: videoForm.title.trim(),
       description: videoForm.description.trim() || null,
-      category: videoForm.category.trim() || "General",
+      category: videoForm.category,
       duration_minutes: videoForm.duration ? Number(videoForm.duration) : null,
       playback_url: videoForm.playbackUrl.trim(),
       sort_order: videos.length + 1,
@@ -211,7 +212,17 @@ export function AdminScreen({ onBack, onChanged }: Props) {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Nouvelle video</Text>
           <TextInput onChangeText={(title) => setVideoForm((current) => ({ ...current, title }))} placeholder="Titre" style={styles.input} value={videoForm.title} />
-          <TextInput onChangeText={(category) => setVideoForm((current) => ({ ...current, category }))} placeholder="Categorie" style={styles.input} value={videoForm.category} />
+          <View style={styles.categoryPicker}>
+            {VIDEO_CATEGORIES.map((category) => (
+              <Pressable
+                key={category}
+                onPress={() => setVideoForm((current) => ({ ...current, category }))}
+                style={[styles.categoryOption, videoForm.category === category && styles.categoryOptionActive]}
+              >
+                <Text style={[styles.categoryOptionText, videoForm.category === category && styles.categoryOptionTextActive]}>{category}</Text>
+              </Pressable>
+            ))}
+          </View>
           <TextInput
             keyboardType="number-pad"
             onChangeText={(duration) => setVideoForm((current) => ({ ...current, duration }))}
@@ -335,6 +346,30 @@ const styles = StyleSheet.create({
   textArea: {
     minHeight: 84,
     textAlignVertical: "top"
+  },
+  categoryPicker: {
+    flexDirection: "row",
+    gap: 8
+  },
+  categoryOption: {
+    alignItems: "center",
+    borderColor: "#cbd5e1",
+    borderRadius: 999,
+    borderWidth: 1,
+    flex: 1,
+    paddingVertical: 10
+  },
+  categoryOptionActive: {
+    backgroundColor: "#0f172a",
+    borderColor: "#0f172a"
+  },
+  categoryOptionText: {
+    color: "#0f172a",
+    fontSize: 14,
+    fontWeight: "700"
+  },
+  categoryOptionTextActive: {
+    color: "#ffffff"
   },
   primaryButton: {
     alignItems: "center",
