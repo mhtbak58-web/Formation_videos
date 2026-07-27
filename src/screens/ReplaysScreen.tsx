@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Animated, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { VIDEO_CATEGORIES } from "../lib/categories";
 import { Video } from "../types";
@@ -11,6 +11,8 @@ type Props = {
 
 export function ReplaysScreen({ videos, onBack }: Props) {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
+  const scale = useRef(new Animated.Value(0.85)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current;
 
   const groups = useMemo(() => {
     return VIDEO_CATEGORIES.map((category) => ({
@@ -18,6 +20,23 @@ export function ReplaysScreen({ videos, onBack }: Props) {
       items: videos.filter((video) => video.category === category)
     })).filter((group) => group.items.length > 0);
   }, [videos]);
+
+  useEffect(() => {
+    if (!selectedVideo) {
+      return;
+    }
+
+    scale.setValue(0.85);
+    backdropOpacity.setValue(0);
+    Animated.parallel([
+      Animated.spring(scale, { friction: 9, tension: 90, toValue: 1, useNativeDriver: false }),
+      Animated.timing(backdropOpacity, { duration: 200, toValue: 1, useNativeDriver: false })
+    ]).start();
+  }, [selectedVideo]);
+
+  function closePlayer() {
+    setSelectedVideo(null);
+  }
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -32,17 +51,6 @@ export function ReplaysScreen({ videos, onBack }: Props) {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {selectedVideo ? (
-          <View style={styles.playerSection}>
-            <VideoPlayer source={selectedVideo.playback_url} style={styles.video} />
-            <View style={styles.playerInfo}>
-              <Text style={styles.selectedCategory}>{selectedVideo.category}</Text>
-              <Text style={styles.selectedTitle}>{selectedVideo.title}</Text>
-              {selectedVideo.description ? <Text style={styles.selectedDescription}>{selectedVideo.description}</Text> : null}
-            </View>
-          </View>
-        ) : null}
-
         {videos.length === 0 ? <Text style={styles.emptyText}>Aucun replay ou tuto disponible pour le moment.</Text> : null}
 
         {groups.map(({ category, items }) => (
@@ -55,7 +63,7 @@ export function ReplaysScreen({ videos, onBack }: Props) {
                   onPress={() => setSelectedVideo(video)}
                   style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}
                 >
-                  <View style={[styles.tileThumbnail, selectedVideo?.id === video.id && styles.tileThumbnailActive]}>
+                  <View style={styles.tileThumbnail}>
                     <Text style={styles.tilePlay}>▶</Text>
                     {video.duration_minutes ? (
                       <View style={styles.tileDurationBadge}>
@@ -72,6 +80,24 @@ export function ReplaysScreen({ videos, onBack }: Props) {
           </View>
         ))}
       </ScrollView>
+
+      <Modal animationType="fade" onRequestClose={closePlayer} transparent visible={Boolean(selectedVideo)}>
+        <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
+          {selectedVideo ? (
+            <Animated.View style={[styles.playerCard, { transform: [{ scale }] }]}>
+              <Pressable hitSlop={8} onPress={closePlayer} style={styles.closeButton}>
+                <Text style={styles.closeIcon}>✕</Text>
+              </Pressable>
+              <VideoPlayer source={selectedVideo.playback_url} style={styles.video} />
+              <View style={styles.playerInfo}>
+                <Text style={styles.selectedCategory}>{selectedVideo.category}</Text>
+                <Text style={styles.selectedTitle}>{selectedVideo.title}</Text>
+                {selectedVideo.description ? <Text style={styles.selectedDescription}>{selectedVideo.description}</Text> : null}
+              </View>
+            </Animated.View>
+          ) : null}
+        </Animated.View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -126,40 +152,6 @@ const styles = StyleSheet.create({
     marginBottom: 18,
     textAlign: "center"
   },
-  playerSection: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E0C8B7",
-    borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 28,
-    overflow: "hidden"
-  },
-  video: {
-    aspectRatio: 16 / 9,
-    backgroundColor: "#1C1814",
-    width: "100%"
-  },
-  playerInfo: {
-    gap: 6,
-    padding: 20
-  },
-  selectedCategory: {
-    color: "#7A9C59",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-    textTransform: "uppercase"
-  },
-  selectedTitle: {
-    color: "#2B2420",
-    fontSize: 19,
-    fontWeight: "700"
-  },
-  selectedDescription: {
-    color: "#7A6F61",
-    fontSize: 14,
-    lineHeight: 20
-  },
   categoryBlock: {
     marginBottom: 18
   },
@@ -192,10 +184,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     width: "100%"
   },
-  tileThumbnailActive: {
-    borderColor: "#7A9C59",
-    borderWidth: 2
-  },
   tilePlay: {
     color: "#7A9C59",
     fontSize: 26
@@ -219,5 +207,62 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     textAlign: "center"
+  },
+  backdrop: {
+    alignItems: "center",
+    backgroundColor: "rgba(15,12,10,0.9)",
+    flex: 1,
+    justifyContent: "center",
+    padding: 20
+  },
+  playerCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 18,
+    maxWidth: 920,
+    overflow: "hidden",
+    width: "100%"
+  },
+  closeButton: {
+    alignItems: "center",
+    backgroundColor: "rgba(15,12,10,0.65)",
+    borderRadius: 18,
+    height: 36,
+    justifyContent: "center",
+    position: "absolute",
+    right: 12,
+    top: 12,
+    width: 36,
+    zIndex: 10
+  },
+  closeIcon: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "700"
+  },
+  video: {
+    aspectRatio: 16 / 9,
+    backgroundColor: "#1C1814",
+    width: "100%"
+  },
+  playerInfo: {
+    gap: 6,
+    padding: 20
+  },
+  selectedCategory: {
+    color: "#7A9C59",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1.2,
+    textTransform: "uppercase"
+  },
+  selectedTitle: {
+    color: "#2B2420",
+    fontSize: 19,
+    fontWeight: "700"
+  },
+  selectedDescription: {
+    color: "#7A6F61",
+    fontSize: 14,
+    lineHeight: 20
   }
 });
