@@ -1,7 +1,13 @@
-import { Pressable, ScrollView, SafeAreaView, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, SafeAreaView, StyleSheet, Text, View } from "react-native";
 import { formatDuration } from "../lib/format";
 import { colors } from "../lib/theme";
 import { ProgressByVideo, Video } from "../types";
+
+const heroImage = require("../assets/images/hero-camera-studio.jpg");
+const promoImageSource = require("../assets/images/promo-desk-items.jpg");
+const resourcePdfImage = require("../assets/images/resource-pdf.jpg");
+const resourceChecklistImage = require("../assets/images/resource-checklist.jpg");
+const resourceEditingImage = require("../assets/images/resource-editing.jpg");
 
 type Props = {
   canViewReplays: boolean;
@@ -14,9 +20,9 @@ type Props = {
 };
 
 const RESOURCES = [
-  { icon: "📄", label: "Support PDF du parcours", description: "Telechargez le support complet du parcours en format PDF." },
-  { icon: "📋", label: "Check-list de mise en pratique", description: "Un guide pratique pour vous aider a passer a l'action efficacement." },
-  { icon: "🎬", label: "Exemples a telecharger", description: "Accedez a des exemples concrets pour vous inspirer et progresser." }
+  { icon: "📄", image: resourcePdfImage, label: "Support PDF du parcours", description: "Telechargez le support complet du parcours en format PDF." },
+  { icon: "📋", image: resourceChecklistImage, label: "Check-list de mise en pratique", description: "Un guide pratique pour vous aider a passer a l'action efficacement." },
+  { icon: "🎬", image: resourceEditingImage, label: "Exemples a telecharger", description: "Accedez a des exemples concrets pour vous inspirer et progresser." }
 ];
 
 export function HomeScreen({ canViewReplays, courseVideos, email, progress, onOpenCategories, onOpenReplays, onStartCourses }: Props) {
@@ -61,8 +67,7 @@ export function HomeScreen({ canViewReplays, courseVideos, email, progress, onOp
         </View>
 
         <View style={styles.hero}>
-          <View style={styles.heroOverlay} />
-          <Text style={styles.heroIcon}>🎥</Text>
+          <Image resizeMode="cover" source={heroImage} style={styles.heroImage} />
         </View>
 
         <Pressable onPress={onOpenCategories} style={({ pressed }) => [styles.categoryPicker, pressed && styles.pressed]}>
@@ -81,9 +86,7 @@ export function HomeScreen({ canViewReplays, courseVideos, email, progress, onOp
               <Text style={styles.promoButtonText}>Commencer →</Text>
             </Pressable>
           </View>
-          <View style={styles.promoImage}>
-            <Text style={styles.promoImageIcon}>🎞️</Text>
-          </View>
+          <Image resizeMode="cover" source={promoImageSource} style={styles.promoImage} />
         </View>
 
         <View style={styles.resourcesBlock}>
@@ -93,8 +96,11 @@ export function HomeScreen({ canViewReplays, courseVideos, email, progress, onOp
           </View>
           {RESOURCES.map((resource) => (
             <View key={resource.label} style={styles.resourceCard}>
-              <View style={styles.resourceThumbnail}>
-                <Text style={styles.resourceThumbnailIcon}>{resource.icon}</Text>
+              <View style={styles.resourceThumbnailWrap}>
+                <Image resizeMode="cover" source={resource.image} style={styles.resourceThumbnail} />
+                <View style={styles.resourceThumbnailBadge}>
+                  <Text style={styles.resourceThumbnailIcon}>{resource.icon}</Text>
+                </View>
               </View>
               <View style={styles.resourceInfo}>
                 <Text style={styles.resourceLabel}>{resource.label}</Text>
@@ -202,25 +208,15 @@ const styles = StyleSheet.create({
     marginTop: 4
   },
   hero: {
-    alignItems: "center",
     backgroundColor: colors.primaryDark,
     borderRadius: 18,
-    height: 130,
-    justifyContent: "center",
+    height: 150,
     marginBottom: 18,
     overflow: "hidden"
   },
-  heroOverlay: {
-    backgroundColor: colors.primary,
-    height: 220,
-    position: "absolute",
-    right: -60,
-    top: -40,
-    transform: [{ rotate: "20deg" }],
-    width: 160
-  },
-  heroIcon: {
-    fontSize: 34
+  heroImage: {
+    height: "100%",
+    width: "100%"
   },
   categoryPicker: {
     alignItems: "center",
@@ -294,14 +290,9 @@ const styles = StyleSheet.create({
     fontWeight: "800"
   },
   promoImage: {
-    alignItems: "center",
     alignSelf: "stretch",
     backgroundColor: colors.primarySoft,
-    flex: 2,
-    justifyContent: "center"
-  },
-  promoImageIcon: {
-    fontSize: 30
+    flex: 2
   },
   resourcesBlock: {
     gap: 10
@@ -332,16 +323,28 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 12
   },
+  resourceThumbnailWrap: {
+    height: 56,
+    width: 56
+  },
   resourceThumbnail: {
+    borderRadius: 12,
+    height: 56,
+    width: 56
+  },
+  resourceThumbnailBadge: {
     alignItems: "center",
-    backgroundColor: colors.primarySoft,
-    borderRadius: 10,
-    height: 52,
+    backgroundColor: colors.card,
+    borderRadius: 12,
+    bottom: -6,
+    height: 24,
     justifyContent: "center",
-    width: 52
+    left: -6,
+    position: "absolute",
+    width: 24
   },
   resourceThumbnailIcon: {
-    fontSize: 20
+    fontSize: 12
   },
   resourceInfo: {
     flex: 1,
