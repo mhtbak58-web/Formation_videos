@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import { hasSupabaseConfig } from "../lib/supabase";
+import { colors } from "../lib/theme";
 
 type Props = {
   demoMode: boolean;
@@ -52,7 +53,7 @@ export function AuthScreen({ demoMode, onDemoAccess, onSubmit }: Props) {
           keyboardType="email-address"
           onChangeText={setEmail}
           placeholder="email@exemple.com"
-          placeholderTextColor="#A89A87"
+          placeholderTextColor={colors.textMuted}
           style={styles.input}
           value={email}
         />
@@ -81,7 +82,7 @@ export function AuthScreen({ demoMode, onDemoAccess, onSubmit }: Props) {
 const styles = StyleSheet.create({
   screen: {
     alignItems: "center",
-    backgroundColor: "#FAF7F3",
+    backgroundColor: colors.background,
     flex: 1,
     justifyContent: "center",
     padding: 24
@@ -94,42 +95,41 @@ const styles = StyleSheet.create({
   },
   brandMark: {
     alignItems: "center",
-    borderColor: "#7A9C59",
+    backgroundColor: colors.primary,
     borderRadius: 14,
-    borderWidth: 1.5,
     height: 48,
     justifyContent: "center",
     width: 48
   },
   brandPlay: {
-    color: "#7A9C59",
+    color: "#FFFFFF",
     fontSize: 18
   },
   brandName: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 22,
     fontWeight: "800"
   },
   brandTagline: {
-    color: "#8C8377",
+    color: colors.textMuted,
     fontSize: 12,
     marginTop: 2
   },
   panel: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E0C8B7",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
     borderRadius: 18,
     borderWidth: 1,
     maxWidth: 440,
     padding: 28,
-    shadowColor: "#2B2420",
+    shadowColor: colors.text,
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.06,
     shadowRadius: 24,
     width: "100%"
   },
   kicker: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 12,
     fontWeight: "700",
     letterSpacing: 2,
@@ -138,25 +138,25 @@ const styles = StyleSheet.create({
     textTransform: "uppercase"
   },
   title: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 26,
     fontWeight: "800",
     marginBottom: 12,
     textAlign: "center"
   },
   subtitle: {
-    color: "#7A6F61",
+    color: colors.textMuted,
     fontSize: 14,
     lineHeight: 21,
     marginBottom: 26,
     textAlign: "center"
   },
   input: {
-    backgroundColor: "#FAF1E9",
-    borderColor: "#E0C8B7",
+    backgroundColor: colors.primarySoft,
+    borderColor: colors.border,
     borderRadius: 999,
     borderWidth: 1,
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 15,
     marginBottom: 16,
     paddingHorizontal: 20,
@@ -164,7 +164,7 @@ const styles = StyleSheet.create({
   },
   button: {
     alignItems: "center",
-    backgroundColor: "#7A9C59",
+    backgroundColor: colors.primary,
     borderRadius: 999,
     flexDirection: "row",
     gap: 8,
@@ -185,14 +185,14 @@ const styles = StyleSheet.create({
   },
   secondaryButton: {
     alignItems: "center",
-    borderColor: "#E0C8B7",
+    borderColor: colors.border,
     borderRadius: 999,
     borderWidth: 1,
     marginTop: 14,
     paddingVertical: 13
   },
   secondaryText: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "700"
   }

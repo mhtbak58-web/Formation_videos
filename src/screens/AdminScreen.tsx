@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { VIDEO_CATEGORIES, VideoCategory } from "../lib/categories";
 import { supabase } from "../lib/supabase";
+import { colors } from "../lib/theme";
 import { Video } from "../types";
 
 type Props = {
@@ -211,7 +212,7 @@ export function AdminScreen({ onBack, onChanged }: Props) {
   if (loading) {
     return (
       <View style={styles.loading}>
-        <ActivityIndicator color="#2563eb" size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
         <Text style={styles.loadingText}>Chargement admin...</Text>
       </View>
     );
@@ -346,23 +347,23 @@ export function AdminScreen({ onBack, onChanged }: Props) {
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.background,
     flex: 1
   },
   loading: {
     alignItems: "center",
-    backgroundColor: "#f8fafc",
+    backgroundColor: colors.background,
     flex: 1,
     justifyContent: "center"
   },
   loadingText: {
-    color: "#475569",
+    color: colors.textMuted,
     marginTop: 12
   },
   header: {
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderBottomColor: "#e2e8f0",
+    backgroundColor: colors.card,
+    borderBottomColor: colors.border,
     borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -370,13 +371,13 @@ const styles = StyleSheet.create({
     paddingVertical: 16
   },
   eyebrow: {
-    color: "#2563eb",
+    color: colors.primary,
     fontSize: 12,
     fontWeight: "800",
     textTransform: "uppercase"
   },
   heading: {
-    color: "#0f172a",
+    color: colors.text,
     fontSize: 24,
     fontWeight: "900"
   },
@@ -386,15 +387,15 @@ const styles = StyleSheet.create({
     paddingBottom: 36
   },
   section: {
-    backgroundColor: "#ffffff",
-    borderColor: "#e2e8f0",
-    borderRadius: 8,
+    backgroundColor: colors.card,
+    borderColor: colors.border,
+    borderRadius: 14,
     borderWidth: 1,
     gap: 10,
     padding: 14
   },
   sectionTitle: {
-    color: "#0f172a",
+    color: colors.text,
     fontSize: 18,
     fontWeight: "900"
   },
@@ -406,10 +407,10 @@ const styles = StyleSheet.create({
     flex: 1
   },
   input: {
-    borderColor: "#cbd5e1",
+    borderColor: colors.border,
     borderRadius: 8,
     borderWidth: 1,
-    color: "#0f172a",
+    color: colors.text,
     fontSize: 15,
     paddingHorizontal: 12,
     paddingVertical: 11
@@ -424,18 +425,18 @@ const styles = StyleSheet.create({
   },
   categoryOption: {
     alignItems: "center",
-    borderColor: "#cbd5e1",
+    borderColor: colors.border,
     borderRadius: 999,
     borderWidth: 1,
     flex: 1,
     paddingVertical: 10
   },
   categoryOptionActive: {
-    backgroundColor: "#0f172a",
-    borderColor: "#0f172a"
+    backgroundColor: colors.primary,
+    borderColor: colors.primary
   },
   categoryOptionText: {
-    color: "#0f172a",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "700"
   },
@@ -444,8 +445,8 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     alignItems: "center",
-    backgroundColor: "#0f172a",
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    borderRadius: 999,
     justifyContent: "center",
     minHeight: 44,
     paddingHorizontal: 14
@@ -456,34 +457,34 @@ const styles = StyleSheet.create({
   },
   outlineButton: {
     alignItems: "center",
-    borderColor: "#cbd5e1",
-    borderRadius: 8,
+    borderColor: colors.border,
+    borderRadius: 999,
     borderWidth: 1,
     justifyContent: "center",
     minHeight: 40,
     paddingHorizontal: 12
   },
   outlineText: {
-    color: "#0f172a",
+    color: colors.text,
     fontSize: 13,
     fontWeight: "800"
   },
   dangerButton: {
     alignItems: "center",
-    backgroundColor: "#fee2e2",
-    borderRadius: 8,
+    backgroundColor: colors.primarySoft,
+    borderRadius: 999,
     justifyContent: "center",
     minHeight: 40,
     paddingHorizontal: 12
   },
   dangerText: {
-    color: "#991b1b",
+    color: colors.primary,
     fontSize: 13,
     fontWeight: "800"
   },
   row: {
     alignItems: "center",
-    borderTopColor: "#e2e8f0",
+    borderTopColor: colors.border,
     borderTopWidth: 1,
     flexDirection: "row",
     gap: 10,
@@ -491,13 +492,13 @@ const styles = StyleSheet.create({
     paddingTop: 10
   },
   rowText: {
-    color: "#0f172a",
+    color: colors.text,
     flex: 1,
     fontSize: 14,
     fontWeight: "700"
   },
   videoRow: {
-    borderTopColor: "#e2e8f0",
+    borderTopColor: colors.border,
     borderTopWidth: 1,
     gap: 10,
     paddingTop: 12
@@ -506,12 +507,12 @@ const styles = StyleSheet.create({
     gap: 2
   },
   videoTitle: {
-    color: "#0f172a",
+    color: colors.text,
     fontSize: 15,
     fontWeight: "800"
   },
   videoMeta: {
-    color: "#64748b",
+    color: colors.textMuted,
     fontSize: 12,
     fontWeight: "700"
   },

@@ -3,12 +3,18 @@ import { ActivityIndicator, Alert, StyleSheet, Text, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StatusBar } from "expo-status-bar";
 import { demoVideos } from "./src/data";
+import { BottomTabBar, TabKey } from "./src/components/BottomTabBar";
 import { VIDEO_CATEGORIES } from "./src/lib/categories";
+import { colors } from "./src/lib/theme";
 import { clearAndroidAutoCatalog, publishAndroidAutoCatalog } from "./src/lib/androidAuto";
 import { hasSupabaseConfig, supabase } from "./src/lib/supabase";
 import { AdminScreen } from "./src/screens/AdminScreen";
 import { AuthScreen } from "./src/screens/AuthScreen";
-import { LibraryScreen } from "./src/screens/LibraryScreen";
+import { CategoriesScreen } from "./src/screens/CategoriesScreen";
+import { FavorisScreen } from "./src/screens/FavorisScreen";
+import { HomeScreen } from "./src/screens/HomeScreen";
+import { MyCoursesScreen } from "./src/screens/MyCoursesScreen";
+import { ProfilScreen } from "./src/screens/ProfilScreen";
 import { ReplaysScreen } from "./src/screens/ReplaysScreen";
 import { ProgressByVideo, Video } from "./src/types";
 
@@ -17,9 +23,12 @@ const REPLAY_CATEGORIES: readonly string[] = VIDEO_CATEGORIES;
 const STORED_EMAIL_KEY = "loggedInEmail";
 
 export default function App() {
+  const [activeTab, setActiveTab] = useState<TabKey>("accueil");
   const [booting, setBooting] = useState(true);
-  const [email, setEmail] = useState("");
   const [canViewReplays, setCanViewReplays] = useState(false);
+  const [courseCategoryFilter, setCourseCategoryFilter] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
   const [hasAccess, setHasAccess] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [progress, setProgress] = useState<ProgressByVideo>({});
@@ -29,6 +38,10 @@ export default function App() {
 
   const courseVideos = useMemo(() => videos.filter((video) => !REPLAY_CATEGORIES.includes(video.category)), [videos]);
   const replayVideos = useMemo(() => videos.filter((video) => REPLAY_CATEGORIES.includes(video.category)), [videos]);
+  const accessibleVideos = useMemo(
+    () => (canViewReplays ? [...courseVideos, ...replayVideos] : courseVideos),
+    [courseVideos, replayVideos, canViewReplays]
+  );
 
   async function attemptAccess(rawEmail: string) {
     const normalizedEmail = rawEmail.trim().toLowerCase();
@@ -73,13 +86,15 @@ export default function App() {
     await AsyncStorage.setItem(STORED_EMAIL_KEY, normalizedEmail);
 
     const videosQuery = client.from("videos").select("*").order("sort_order", { ascending: true });
-    const [{ data: videoRows, error: videosError }, { data: progressRows, error: progressError }] = await Promise.all([
-      nextIsAdmin ? videosQuery : videosQuery.eq("is_published", true),
-      client.from("video_progress").select("video_id, completed").eq("email", normalizedEmail)
-    ]);
+    const [{ data: videoRows, error: videosError }, { data: progressRows, error: progressError }, { data: favoriteRows, error: favoritesError }] =
+      await Promise.all([
+        nextIsAdmin ? videosQuery : videosQuery.eq("is_published", true),
+        client.from("video_progress").select("video_id, completed").eq("email", normalizedEmail),
+        client.from("video_favorites").select("video_id").eq("email", normalizedEmail)
+      ]);
 
-    if (videosError || progressError) {
-      Alert.alert("Chargement incomplet", videosError?.message ?? progressError?.message);
+    if (videosError || progressError || favoritesError) {
+      Alert.alert("Chargement incomplet", videosError?.message ?? progressError?.message ?? favoritesError?.message);
     }
 
     setHasAccess(true);
@@ -92,6 +107,7 @@ export default function App() {
         return acc;
       }, {})
     );
+    setFavoriteIds(new Set((favoriteRows ?? []).map((item) => item.video_id as string)));
     setBooting(false);
   }
 
@@ -116,6 +132,34 @@ export default function App() {
     }
   }, [videos, hasAccess]);
 
+  async function toggleFavorite(videoId: string) {
+    const isFavorite = favoriteIds.has(videoId);
+    const nextFavoriteIds = new Set(favoriteIds);
+    if (isFavorite) {
+      nextFavoriteIds.delete(videoId);
+    } else {
+      nextFavoriteIds.add(videoId);
+    }
+    setFavoriteIds(nextFavoriteIds);
+
+    if (!supabase) {
+      return;
+    }
+
+    const { error } = isFavorite
+      ? await supabase.from("video_favorites").delete().match({ email, video_id: videoId })
+      : await supabase.from("video_favorites").insert({ email, video_id: videoId });
+
+    if (error) {
+      Alert.alert("Favoris non enregistres", error.message);
+    }
+  }
+
+  function selectCourseCategory(category: string) {
+    setCourseCategoryFilter(category);
+    setActiveTab("mescours");
+  }
+
   async function signOut() {
     await AsyncStorage.removeItem(STORED_EMAIL_KEY);
     await clearAndroidAutoCatalog();
@@ -126,6 +170,9 @@ export default function App() {
     setCanViewReplays(false);
     setShowAdmin(false);
     setShowReplays(false);
+    setActiveTab("accueil");
+    setCourseCategoryFilter(null);
+    setFavoriteIds(new Set());
     setProgress({});
   }
 
@@ -133,7 +180,7 @@ export default function App() {
     return (
       <View style={styles.loading}>
         <StatusBar style="dark" />
-        <ActivityIndicator color="#7A9C59" size="large" />
+        <ActivityIndicator color={colors.primary} size="large" />
         <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
@@ -176,7 +223,7 @@ export default function App() {
     return (
       <>
         <StatusBar style="dark" />
-        <ReplaysScreen onBack={() => setShowReplays(false)} videos={replayVideos} />
+        <ReplaysScreen favoriteIds={favoriteIds} onBack={() => setShowReplays(false)} onToggleFavorite={toggleFavorite} videos={replayVideos} />
       </>
     );
   }
@@ -184,17 +231,46 @@ export default function App() {
   return (
     <>
       <StatusBar style="dark" />
-      <LibraryScreen
-        canViewReplays={canViewReplays}
-        email={email}
-        isAdmin={isAdmin}
-        onOpenAdmin={() => setShowAdmin(true)}
-        onOpenReplays={() => setShowReplays(true)}
-        onProgressChange={setProgress}
-        onSignOut={signOut}
-        progress={progress}
-        videos={courseVideos}
-      />
+      <View style={styles.tabScreen}>
+        {activeTab === "accueil" ? (
+          <HomeScreen
+            canViewReplays={canViewReplays}
+            courseVideos={courseVideos}
+            email={email}
+            progress={progress}
+            onOpenCategories={() => setActiveTab("categories")}
+            onOpenReplays={() => setShowReplays(true)}
+            onStartCourses={() => setActiveTab("mescours")}
+          />
+        ) : null}
+        {activeTab === "categories" ? (
+          <CategoriesScreen
+            canViewReplays={canViewReplays}
+            courseVideos={courseVideos}
+            onOpenReplays={() => setShowReplays(true)}
+            onSelectCategory={selectCourseCategory}
+          />
+        ) : null}
+        {activeTab === "mescours" ? (
+          <MyCoursesScreen
+            email={email}
+            favoriteIds={favoriteIds}
+            progress={progress}
+            selectedCategory={courseCategoryFilter}
+            videos={courseVideos}
+            onProgressChange={setProgress}
+            onSelectCategory={setCourseCategoryFilter}
+            onToggleFavorite={toggleFavorite}
+          />
+        ) : null}
+        {activeTab === "favoris" ? (
+          <FavorisScreen favoriteIds={favoriteIds} videos={accessibleVideos} onToggleFavorite={toggleFavorite} />
+        ) : null}
+        {activeTab === "profil" ? (
+          <ProfilScreen email={email} isAdmin={isAdmin} onOpenAdmin={() => setShowAdmin(true)} onSignOut={signOut} />
+        ) : null}
+        <BottomTabBar activeTab={activeTab} onChange={setActiveTab} />
+      </View>
     </>
   );
 }
@@ -202,25 +278,25 @@ export default function App() {
 const styles = StyleSheet.create({
   loading: {
     alignItems: "center",
-    backgroundColor: "#FAF7F3",
+    backgroundColor: colors.background,
     flex: 1,
     justifyContent: "center"
   },
   loadingText: {
-    color: "#7A6F61",
+    color: colors.textMuted,
     fontSize: 14,
     letterSpacing: 0.4,
     marginTop: 14
   },
   denied: {
     alignItems: "center",
-    backgroundColor: "#FAF7F3",
+    backgroundColor: colors.background,
     flex: 1,
     justifyContent: "center",
     padding: 24
   },
   deniedTitle: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 24,
     fontWeight: "700",
     letterSpacing: 0.2,
@@ -228,17 +304,20 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   deniedText: {
-    color: "#7A6F61",
+    color: colors.textMuted,
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 18,
     textAlign: "center"
   },
   deniedLink: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "700",
     letterSpacing: 0.6,
     textTransform: "uppercase"
+  },
+  tabScreen: {
+    flex: 1
   }
 });

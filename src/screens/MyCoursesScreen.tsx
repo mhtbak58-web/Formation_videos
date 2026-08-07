@@ -3,39 +3,31 @@ import { Alert, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } fr
 import { VideoCard } from "../components/VideoCard";
 import { VideoPlayer } from "../components/VideoPlayer";
 import { supabase } from "../lib/supabase";
+import { colors } from "../lib/theme";
 import { ProgressByVideo, Video } from "../types";
 
 type Props = {
-  canViewReplays: boolean;
   email: string;
+  favoriteIds: Set<string>;
   progress: ProgressByVideo;
-  isAdmin: boolean;
+  selectedCategory: string | null;
   videos: Video[];
-  onOpenAdmin: () => void;
-  onOpenReplays: () => void;
   onProgressChange: (progress: ProgressByVideo) => void;
-  onSignOut: () => void;
+  onSelectCategory: (category: string | null) => void;
+  onToggleFavorite: (videoId: string) => void;
 };
 
-const RESOURCES = [
-  { icon: "📄", label: "Support PDF du parcours" },
-  { icon: "📋", label: "Check-list de mise en pratique" },
-  { icon: "🎬", label: "Exemples a telecharger" }
-];
-
-function formatDuration(totalMinutes: number) {
-  if (totalMinutes < 60) {
-    return `${totalMinutes}min`;
-  }
-
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-  return minutes > 0 ? `${hours}h${String(minutes).padStart(2, "0")}` : `${hours}h`;
-}
-
-export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos, onOpenAdmin, onOpenReplays, onProgressChange, onSignOut }: Props) {
+export function MyCoursesScreen({
+  email,
+  favoriteIds,
+  progress,
+  selectedCategory,
+  videos,
+  onProgressChange,
+  onSelectCategory,
+  onToggleFavorite
+}: Props) {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(videos[0] ?? null);
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
 
   const categories = useMemo(() => {
@@ -67,8 +59,6 @@ export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos
 
   const totalCount = videos.length;
   const completedCount = videos.filter((video) => progress[video.id]).length;
-  const completionRatio = totalCount > 0 ? completedCount / totalCount : 0;
-  const totalMinutes = videos.reduce((sum, video) => sum + (video.duration_minutes ?? 0), 0);
   const allCompleted = totalCount > 0 && completedCount === totalCount;
 
   async function markComplete(video: Video) {
@@ -102,41 +92,8 @@ export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos
 
   return (
     <SafeAreaView style={styles.screen}>
-      <View style={styles.progressTrack}>
-        <View style={[styles.progressFill, { width: `${Math.round(completionRatio * 100)}%` }]} />
-      </View>
-
       <View style={styles.header}>
-        <View style={styles.brandRow}>
-          <View style={styles.brandMark}>
-            <Text style={styles.brandPlay}>▶</Text>
-          </View>
-          <View>
-            <Text style={styles.heading}>Catalogue video</Text>
-            <Text style={styles.email}>{email}</Text>
-            <Text style={styles.metaLine}>
-              📚 {totalCount} module{totalCount > 1 ? "s" : ""} • ⏱️ {formatDuration(totalMinutes)} de contenu
-            </Text>
-            <Text style={styles.progressLabel}>
-              {completedCount}/{totalCount} termines · {Math.round(completionRatio * 100)}%
-            </Text>
-          </View>
-        </View>
-        <View style={styles.headerActions}>
-          {canViewReplays ? (
-            <Pressable onPress={onOpenReplays} style={styles.replaysButton}>
-              <Text style={styles.replaysText}>Replays &amp; Tutos</Text>
-            </Pressable>
-          ) : null}
-          {isAdmin ? (
-            <Pressable onPress={onOpenAdmin} style={styles.adminButton}>
-              <Text style={styles.adminText}>Admin</Text>
-            </Pressable>
-          ) : null}
-          <Pressable onPress={onSignOut} style={styles.signOutButton}>
-            <Text style={styles.signOutText}>Sortir</Text>
-          </Pressable>
-        </View>
+        <Text style={styles.heading}>Mes cours</Text>
       </View>
 
       <View style={styles.categoryPickerWrap}>
@@ -153,7 +110,7 @@ export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos
           <View style={styles.categoryMenu}>
             <Pressable
               onPress={() => {
-                setSelectedCategory(null);
+                onSelectCategory(null);
                 setCategoryMenuOpen(false);
               }}
               style={({ pressed }) => [styles.categoryMenuRow, pressed && styles.pressed]}
@@ -165,7 +122,7 @@ export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos
               <Pressable
                 key={category}
                 onPress={() => {
-                  setSelectedCategory(category);
+                  onSelectCategory(category);
                   setCategoryMenuOpen(false);
                 }}
                 style={({ pressed }) => [styles.categoryMenuRow, pressed && styles.pressed]}
@@ -179,6 +136,10 @@ export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
+        {totalCount === 0 ? (
+          <Text style={styles.emptyText}>Aucun cours pour le moment. Reviens bientot pour un parcours structure.</Text>
+        ) : null}
+
         {selectedVideo ? (
           <View style={styles.playerSection}>
             <VideoPlayer source={selectedVideo.playback_url} style={styles.video} />
@@ -200,9 +161,11 @@ export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos
             {items.map((video) => (
               <VideoCard
                 completed={Boolean(progress[video.id])}
+                isFavorite={favoriteIds.has(video.id)}
                 key={video.id}
                 locked={lockedByVideoId[video.id]}
                 onPress={() => selectVideo(video)}
+                onToggleFavorite={() => onToggleFavorite(video.id)}
                 video={video}
               />
             ))}
@@ -219,16 +182,6 @@ export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos
             </View>
           </View>
         ) : null}
-
-        <View style={styles.resourcesBlock}>
-          <Text style={styles.categoryTitle}>Ressources</Text>
-          {RESOURCES.map((resource) => (
-            <View key={resource.label} style={styles.resourceRow}>
-              <Text style={styles.resourceIcon}>{resource.icon}</Text>
-              <Text style={styles.resourceLabel}>{resource.label}</Text>
-            </View>
-          ))}
-        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -236,113 +189,17 @@ export function LibraryScreen({ canViewReplays, email, progress, isAdmin, videos
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: "#FAF7F3",
+    backgroundColor: colors.background,
     flex: 1
   },
   header: {
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderBottomColor: "#E0C8B7",
-    borderBottomWidth: 1,
-    flexDirection: "row",
-    justifyContent: "space-between",
     paddingHorizontal: 18,
-    paddingVertical: 18
-  },
-  brandRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: 12
-  },
-  brandMark: {
-    alignItems: "center",
-    borderColor: "#7A9C59",
-    borderRadius: 10,
-    borderWidth: 1.5,
-    height: 38,
-    justifyContent: "center",
-    width: 38
-  },
-  brandPlay: {
-    color: "#7A9C59",
-    fontSize: 14
-  },
-  eyebrow: {
-    color: "#7A9C59",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1.6,
-    marginBottom: 6,
-    textTransform: "uppercase"
+    paddingTop: 18
   },
   heading: {
-    color: "#2B2420",
-    fontSize: 19,
-    fontWeight: "700"
-  },
-  email: {
-    color: "#A89A87",
-    fontSize: 12,
-    marginTop: 2
-  },
-  metaLine: {
-    color: "#7A6F61",
-    fontSize: 12,
-    marginTop: 6
-  },
-  progressLabel: {
-    color: "#7A9C59",
-    fontSize: 11,
-    fontWeight: "700",
-    marginTop: 3
-  },
-  progressTrack: {
-    backgroundColor: "#E0C8B7",
-    height: 4,
-    width: "100%"
-  },
-  progressFill: {
-    backgroundColor: "#7A9C59",
-    height: 4
-  },
-  signOutButton: {
-    borderColor: "#E0C8B7",
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 9
-  },
-  headerActions: {
-    flexDirection: "row",
-    gap: 8
-  },
-  adminButton: {
-    backgroundColor: "#7A9C59",
-    borderRadius: 999,
-    paddingHorizontal: 16,
-    paddingVertical: 9
-  },
-  replaysButton: {
-    borderColor: "#7A9C59",
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 9
-  },
-  replaysText: {
-    color: "#7A9C59",
-    fontSize: 12,
-    fontWeight: "700"
-  },
-  adminText: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "700"
-  },
-  signOutText: {
-    color: "#2B2420",
-    fontSize: 12,
-    fontWeight: "700"
+    color: colors.text,
+    fontSize: 22,
+    fontWeight: "800"
   },
   categoryPickerWrap: {
     paddingHorizontal: 18,
@@ -352,8 +209,8 @@ const styles = StyleSheet.create({
   categoryPicker: {
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
-    borderColor: "#7A9C59",
+    backgroundColor: colors.card,
+    borderColor: colors.primary,
     borderRadius: 999,
     borderWidth: 1,
     flexDirection: "row",
@@ -365,30 +222,26 @@ const styles = StyleSheet.create({
     opacity: 0.75
   },
   categoryPickerIcon: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 14
   },
   categoryPickerText: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "700"
   },
   categoryPickerChevron: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 10
   },
   categoryMenu: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E0C8B7",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
     borderRadius: 14,
     borderWidth: 1,
     marginTop: 8,
     overflow: "hidden",
-    paddingVertical: 4,
-    shadowColor: "#2B2420",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 18
+    paddingVertical: 4
   },
   categoryMenuRow: {
     alignItems: "center",
@@ -398,12 +251,12 @@ const styles = StyleSheet.create({
     paddingVertical: 13
   },
   categoryMenuRowText: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 14,
     fontWeight: "600"
   },
   categoryMenuCheck: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "700"
   },
@@ -411,9 +264,15 @@ const styles = StyleSheet.create({
     padding: 18,
     paddingBottom: 36
   },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    marginBottom: 18,
+    textAlign: "center"
+  },
   playerSection: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E0C8B7",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 28,
@@ -428,20 +287,28 @@ const styles = StyleSheet.create({
     gap: 8,
     padding: 20
   },
+  eyebrow: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 1.6,
+    marginBottom: 6,
+    textTransform: "uppercase"
+  },
   selectedTitle: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 19,
     fontWeight: "700"
   },
   selectedDescription: {
-    color: "#7A6F61",
+    color: colors.textMuted,
     fontSize: 14,
     lineHeight: 20
   },
   completeButton: {
     alignItems: "center",
     alignSelf: "flex-start",
-    backgroundColor: "#7A9C59",
+    backgroundColor: colors.primary,
     borderRadius: 999,
     flexDirection: "row",
     gap: 8,
@@ -462,15 +329,15 @@ const styles = StyleSheet.create({
     marginBottom: 18
   },
   categoryTitle: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 12
   },
   certificateCard: {
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderColor: "#7A9C59",
+    backgroundColor: colors.card,
+    borderColor: colors.primary,
     borderRadius: 16,
     borderWidth: 1,
     marginBottom: 24,
@@ -481,14 +348,14 @@ const styles = StyleSheet.create({
     marginBottom: 10
   },
   certificateTitle: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 17,
     fontWeight: "700",
     marginBottom: 6,
     textAlign: "center"
   },
   certificateText: {
-    color: "#7A6F61",
+    color: colors.textMuted,
     fontSize: 13,
     lineHeight: 19,
     marginBottom: 14,
@@ -499,34 +366,12 @@ const styles = StyleSheet.create({
     gap: 8
   },
   badge: {
-    backgroundColor: "#7A9C59",
+    backgroundColor: colors.primary,
     borderRadius: 999,
     color: "#FFFFFF",
     fontSize: 12,
     fontWeight: "700",
     paddingHorizontal: 14,
     paddingVertical: 8
-  },
-  resourcesBlock: {
-    marginBottom: 18
-  },
-  resourceRow: {
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E0C8B7",
-    borderRadius: 12,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: 12,
-    marginBottom: 10,
-    padding: 14
-  },
-  resourceIcon: {
-    fontSize: 18
-  },
-  resourceLabel: {
-    color: "#2B2420",
-    fontSize: 14,
-    fontWeight: "600"
   }
 });

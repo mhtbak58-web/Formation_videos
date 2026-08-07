@@ -1,14 +1,17 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { colors } from "../lib/theme";
 import { Video } from "../types";
 
 type Props = {
   completed: boolean;
+  isFavorite?: boolean;
   locked?: boolean;
   video: Video;
   onPress: () => void;
+  onToggleFavorite?: () => void;
 };
 
-export function VideoCard({ completed, locked, video, onPress }: Props) {
+export function VideoCard({ completed, isFavorite, locked, video, onPress, onToggleFavorite }: Props) {
   return (
     <Pressable onPress={onPress} style={({ pressed }) => [styles.card, locked && styles.cardLocked, pressed && styles.pressed]}>
       <View style={styles.thumbnail}>
@@ -38,14 +41,20 @@ export function VideoCard({ completed, locked, video, onPress }: Props) {
           ) : null}
         </View>
       </View>
+      {onToggleFavorite ? (
+        <Pressable hitSlop={8} onPress={onToggleFavorite} style={styles.favoriteButton}>
+          <Text style={[styles.favoriteIcon, isFavorite && styles.favoriteIconActive]}>{isFavorite ? "♥" : "♡"}</Text>
+        </Pressable>
+      ) : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E0C8B7",
+    alignItems: "center",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
     borderRadius: 14,
     borderWidth: 1,
     flexDirection: "row",
@@ -60,26 +69,26 @@ const styles = StyleSheet.create({
     opacity: 0.6
   },
   titleLocked: {
-    color: "#A89A87"
+    color: colors.textMuted
   },
   lockedLabel: {
-    color: "#A89A87",
+    color: colors.textMuted,
     fontSize: 12
   },
   thumbnail: {
     alignItems: "center",
     aspectRatio: 1,
-    backgroundColor: "#FAF7F3",
+    backgroundColor: colors.primarySoft,
     borderRadius: 10,
     justifyContent: "center",
     width: 84
   },
   play: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 22
   },
   durationBadge: {
-    backgroundColor: "rgba(43,36,32,0.85)",
+    backgroundColor: "rgba(26,21,18,0.85)",
     borderRadius: 4,
     bottom: 6,
     left: 6,
@@ -104,31 +113,44 @@ const styles = StyleSheet.create({
     marginTop: 2
   },
   category: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 12,
     fontWeight: "700"
   },
   dot: {
-    color: "#A89A87",
+    color: colors.textMuted,
     fontSize: 12
   },
   done: {
-    color: "#7A6F61",
+    color: colors.textMuted,
     fontSize: 12
   },
   title: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "700"
   },
   description: {
-    color: "#7A6F61",
+    color: colors.textMuted,
     fontSize: 13,
     lineHeight: 18
   },
   duration: {
-    color: "#A89A87",
+    color: colors.textMuted,
     fontSize: 11,
     fontWeight: "600"
+  },
+  favoriteButton: {
+    alignItems: "center",
+    height: 32,
+    justifyContent: "center",
+    width: 32
+  },
+  favoriteIcon: {
+    color: colors.textMuted,
+    fontSize: 20
+  },
+  favoriteIconActive: {
+    color: colors.primary
   }
 });

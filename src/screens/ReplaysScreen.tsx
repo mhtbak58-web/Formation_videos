@@ -1,18 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, Modal, Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
-import { VideoPlayer } from "../components/VideoPlayer";
+import { useMemo, useState } from "react";
+import { Pressable, SafeAreaView, ScrollView, StyleSheet, Text, View } from "react-native";
+import { VideoPlayerModal } from "../components/VideoPlayerModal";
 import { VIDEO_CATEGORIES } from "../lib/categories";
+import { colors } from "../lib/theme";
 import { Video } from "../types";
 
 type Props = {
+  favoriteIds: Set<string>;
   videos: Video[];
   onBack: () => void;
+  onToggleFavorite: (videoId: string) => void;
 };
 
-export function ReplaysScreen({ videos, onBack }: Props) {
+export function ReplaysScreen({ favoriteIds, videos, onBack, onToggleFavorite }: Props) {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
-  const scale = useRef(new Animated.Value(0.85)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
 
   const groups = useMemo(() => {
     return VIDEO_CATEGORIES.map((category) => ({
@@ -20,23 +21,6 @@ export function ReplaysScreen({ videos, onBack }: Props) {
       items: videos.filter((video) => video.category === category)
     })).filter((group) => group.items.length > 0);
   }, [videos]);
-
-  useEffect(() => {
-    if (!selectedVideo) {
-      return;
-    }
-
-    scale.setValue(0.85);
-    backdropOpacity.setValue(0);
-    Animated.parallel([
-      Animated.spring(scale, { friction: 9, tension: 90, toValue: 1, useNativeDriver: false }),
-      Animated.timing(backdropOpacity, { duration: 200, toValue: 1, useNativeDriver: false })
-    ]).start();
-  }, [selectedVideo]);
-
-  function closePlayer() {
-    setSelectedVideo(null);
-  }
 
   return (
     <SafeAreaView style={styles.screen}>
@@ -58,59 +42,46 @@ export function ReplaysScreen({ videos, onBack }: Props) {
             <Text style={styles.categoryTitle}>{category}</Text>
             <View style={styles.grid}>
               {items.map((video) => (
-                <Pressable
-                  key={video.id}
-                  onPress={() => setSelectedVideo(video)}
-                  style={({ pressed }) => [styles.tile, pressed && styles.tilePressed]}
-                >
-                  <View style={styles.tileThumbnail}>
-                    <Text style={styles.tilePlay}>▶</Text>
-                    {video.duration_minutes ? (
-                      <View style={styles.tileDurationBadge}>
-                        <Text style={styles.tileDurationText}>{video.duration_minutes} min</Text>
-                      </View>
-                    ) : null}
-                  </View>
+                <View key={video.id} style={styles.tile}>
+                  <Pressable onPress={() => setSelectedVideo(video)} style={({ pressed }) => pressed && styles.pressed}>
+                    <View style={styles.tileThumbnail}>
+                      <Text style={styles.tilePlay}>▶</Text>
+                      {video.duration_minutes ? (
+                        <View style={styles.tileDurationBadge}>
+                          <Text style={styles.tileDurationText}>{video.duration_minutes} min</Text>
+                        </View>
+                      ) : null}
+                    </View>
+                  </Pressable>
+                  <Pressable hitSlop={8} onPress={() => onToggleFavorite(video.id)} style={styles.favoriteButton}>
+                    <Text style={[styles.favoriteIcon, favoriteIds.has(video.id) && styles.favoriteIconActive]}>
+                      {favoriteIds.has(video.id) ? "♥" : "♡"}
+                    </Text>
+                  </Pressable>
                   <Text numberOfLines={2} style={styles.tileTitle}>
                     {video.title}
                   </Text>
-                </Pressable>
+                </View>
               ))}
             </View>
           </View>
         ))}
       </ScrollView>
 
-      <Modal animationType="fade" onRequestClose={closePlayer} transparent visible={Boolean(selectedVideo)}>
-        <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]}>
-          {selectedVideo ? (
-            <Animated.View style={[styles.playerCard, { transform: [{ scale }] }]}>
-              <Pressable hitSlop={8} onPress={closePlayer} style={styles.closeButton}>
-                <Text style={styles.closeIcon}>✕</Text>
-              </Pressable>
-              <VideoPlayer source={selectedVideo.playback_url} style={styles.video} />
-              <View style={styles.playerInfo}>
-                <Text style={styles.selectedCategory}>{selectedVideo.category}</Text>
-                <Text style={styles.selectedTitle}>{selectedVideo.title}</Text>
-                {selectedVideo.description ? <Text style={styles.selectedDescription}>{selectedVideo.description}</Text> : null}
-              </View>
-            </Animated.View>
-          ) : null}
-        </Animated.View>
-      </Modal>
+      <VideoPlayerModal onClose={() => setSelectedVideo(null)} video={selectedVideo} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
-    backgroundColor: "#FAF7F3",
+    backgroundColor: colors.background,
     flex: 1
   },
   header: {
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderBottomColor: "#E0C8B7",
+    backgroundColor: colors.card,
+    borderBottomColor: colors.border,
     borderBottomWidth: 1,
     flexDirection: "row",
     justifyContent: "space-between",
@@ -118,7 +89,7 @@ const styles = StyleSheet.create({
     paddingVertical: 18
   },
   eyebrow: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 1.6,
@@ -126,19 +97,19 @@ const styles = StyleSheet.create({
     textTransform: "uppercase"
   },
   heading: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 19,
     fontWeight: "700"
   },
   backButton: {
-    borderColor: "#E0C8B7",
+    borderColor: colors.border,
     borderRadius: 999,
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 9
   },
   backText: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "700"
   },
@@ -147,7 +118,7 @@ const styles = StyleSheet.create({
     paddingBottom: 36
   },
   emptyText: {
-    color: "#7A6F61",
+    color: colors.textMuted,
     fontSize: 14,
     marginBottom: 18,
     textAlign: "center"
@@ -156,7 +127,7 @@ const styles = StyleSheet.create({
     marginBottom: 18
   },
   categoryTitle: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 12
@@ -166,18 +137,18 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 16
   },
+  pressed: {
+    opacity: 0.7
+  },
   tile: {
     alignItems: "center",
     width: 108
   },
-  tilePressed: {
-    opacity: 0.7
-  },
   tileThumbnail: {
     alignItems: "center",
     aspectRatio: 1,
-    backgroundColor: "#FFFFFF",
-    borderColor: "#E0C8B7",
+    backgroundColor: colors.card,
+    borderColor: colors.border,
     borderRadius: 14,
     borderWidth: 1,
     justifyContent: "center",
@@ -185,11 +156,11 @@ const styles = StyleSheet.create({
     width: "100%"
   },
   tilePlay: {
-    color: "#7A9C59",
+    color: colors.primary,
     fontSize: 26
   },
   tileDurationBadge: {
-    backgroundColor: "rgba(43,36,32,0.85)",
+    backgroundColor: "rgba(26,21,18,0.85)",
     borderRadius: 4,
     bottom: 6,
     paddingHorizontal: 5,
@@ -202,67 +173,26 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: "600"
   },
+  favoriteButton: {
+    alignItems: "center",
+    height: 28,
+    justifyContent: "center",
+    position: "absolute",
+    right: 2,
+    top: 2,
+    width: 28
+  },
+  favoriteIcon: {
+    color: colors.textMuted,
+    fontSize: 16
+  },
+  favoriteIconActive: {
+    color: colors.primary
+  },
   tileTitle: {
-    color: "#2B2420",
+    color: colors.text,
     fontSize: 12,
     fontWeight: "600",
     textAlign: "center"
-  },
-  backdrop: {
-    alignItems: "center",
-    backgroundColor: "rgba(15,12,10,0.9)",
-    flex: 1,
-    justifyContent: "center",
-    padding: 20
-  },
-  playerCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    maxWidth: 920,
-    overflow: "hidden",
-    width: "100%"
-  },
-  closeButton: {
-    alignItems: "center",
-    backgroundColor: "rgba(15,12,10,0.65)",
-    borderRadius: 18,
-    height: 36,
-    justifyContent: "center",
-    position: "absolute",
-    right: 12,
-    top: 12,
-    width: 36,
-    zIndex: 10
-  },
-  closeIcon: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700"
-  },
-  video: {
-    aspectRatio: 16 / 9,
-    backgroundColor: "#1C1814",
-    width: "100%"
-  },
-  playerInfo: {
-    gap: 6,
-    padding: 20
-  },
-  selectedCategory: {
-    color: "#7A9C59",
-    fontSize: 11,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-    textTransform: "uppercase"
-  },
-  selectedTitle: {
-    color: "#2B2420",
-    fontSize: 19,
-    fontWeight: "700"
-  },
-  selectedDescription: {
-    color: "#7A6F61",
-    fontSize: 14,
-    lineHeight: 20
   }
 });
